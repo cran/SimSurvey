@@ -1,0 +1,197 @@
+---
+title: "Simulation Explorer"
+output: flexdashboard::flex_dashboard
+runtime: shiny
+---
+
+```{r setup, echo=FALSE}
+library(plotly)
+library(viridis)
+knitr::opts_chunk$set(echo = FALSE, fig.height = 7, fig.width = 8, cache = FALSE)
+```
+
+```{r data, include=FALSE}
+load(file.path(tempdir(), "sim.rda")) # sim object saved by vis_sim.R
+```
+
+
+Abundance
+================================================================================
+
+Row {.tabset}
+--------------------------------------------------------------------------------
+
+### Total abundance
+
+```{r}
+plot_trend(sim)
+```
+
+### Recruitment
+
+```{r}
+plot_trend(sim, sum_ages = min(sim$ages))
+```
+
+### Total mortality
+
+```{r}
+plot_surface(sim, mat = "Z")
+```
+
+### Abundance at age
+
+```{r}
+plot_surface(sim, mat = "N")
+```
+
+### Abundance at length
+
+```{r}
+plot_surface(sim, mat = "N_at_length", xlab = "Length", zlab = "N")
+```
+
+
+
+
+Distribution { `r if(!"sp_N" %in% names(sim)) ".hidden"`}
+================================================================================
+
+Column {.sidebar}
+--------------------------------------------------------------------------------
+
+```{r}
+sliderInput("age", "Age", min = min(sim$ages), max = max(sim$ages), 
+            value = 1, step = 1)
+sliderInput("year", "Year", min = min(sim$years), max = max(sim$years), 
+            value = 1, step = 1)
+selectInput("type", "Type", choices = c("heatmap", "contour"), 
+            selected = "contour")
+selectInput("scale", "Scale", choices = c("natural", "log"), 
+            selected = "natural")
+```
+
+Column
+--------------------------------------------------------------------------------
+
+### Distribution
+
+```{r, eval = "sp_N" %in% names(sim)}
+renderPlotly({
+  plot_distribution(sim, ages = input$age, year = input$year, type = input$type,
+                    scale = input$scale)
+})
+
+```
+
+
+
+Survey { `r if(!"setdet" %in% names(sim)) ".hidden"`}
+================================================================================
+
+Column {.sidebar}
+--------------------------------------------------------------------------------
+
+```{r}
+sliderInput("samp_year", "Year", 
+            min = min(sim$years), max = max(sim$years), 
+            value = 1, step = 1)
+sliderInput("samp_sim", "Simulation", 
+            min = min(sim$setdet$sim), max = max(sim$setdet$sim), 
+            value = 1, step = 1)
+```
+
+Column
+--------------------------------------------------------------------------------
+
+### Survey sampling
+
+```{r, eval = "setdet" %in% names(sim)}
+renderPlotly({
+  plot_survey(sim, which_year = input$samp_year, which_sim = input$samp_sim)
+})
+```
+
+
+Estimates { `r if(!"age_strat_error" %in% names(sim)) ".hidden"`}
+================================================================================
+
+
+Column {.sidebar}
+--------------------------------------------------------------------------------
+
+```{r}
+selectInput("set_den", "Set density", 
+            choices = sort(unique(sim$surveys$set_den)))
+selectInput("lengths_cap", "Lengths cap", 
+            choices = sort(unique(sim$surveys$lengths_cap)))
+selectInput("ages_cap", "Ages cap", 
+            choices = sort(unique(sim$surveys$ages_cap)))
+selectInput("fan_length", "Length", 
+            choices = sim$lengths)
+selectInput("fan_age", "Age", 
+            choices = sim$ages)
+```
+
+
+Column {.tabset}
+--------------------------------------------------------------------------------
+
+### Total abundance
+
+```{r, eval = "age_strat_error" %in% names(sim)}
+renderPlotly({
+  s <- sim$surveys
+  i <- s$survey[s$set_den == input$set_den & 
+                        s$lengths_cap == max(s$lengths_cap) &
+                        s$ages_cap == max(s$ages_cap)]
+  plot_total_strat_fan(sim, surveys = i)
+})
+```
+
+### Abundance at length
+
+```{r, eval = "age_strat_error" %in% names(sim)}
+renderPlotly({
+  s <- sim$surveys
+  i <- s$survey[s$set_den == input$set_den & 
+                        s$lengths_cap == input$lengths_cap &
+                        s$ages_cap == max(s$ages_cap)]
+  plot_length_strat_fan(sim, surveys = i, years = sim$years,
+                        lengths = input$fan_length, select_by = "length")
+})
+```
+
+### Abundance at age
+
+```{r, eval = "age_strat_error" %in% names(sim)}
+renderPlotly({
+  s <- sim$surveys
+  i <- s$survey[s$set_den == input$set_den & 
+                        s$lengths_cap == input$lengths_cap &
+                        s$ages_cap == input$ages_cap]
+  plot_age_strat_fan(sim, surveys = i, years = sim$years,
+                        ages = input$fan_age, select_by = "age")
+})
+```
+
+
+
+
+Error { `r if(!"surveys" %in% names(sim)) ".hidden"`}
+================================================================================
+
+Column  {.tabset}
+--------------------------------------------------------------------------------
+
+### Error surface by rule
+
+```{r, eval = "surveys" %in% names(sim)}
+plot_error_surface(sim, plot_by = "rule")
+```
+
+### Error surface by sample size
+
+```{r, eval = "surveys" %in% names(sim)}
+plot_error_surface(sim, plot_by = "samples")
+```
