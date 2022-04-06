@@ -6,6 +6,7 @@
 \usage{
 sim_sets(
   sim,
+  subset_cells,
   n_sims = 1,
   trawl_dim = c(1.5, 0.02),
   min_sets = 2,
@@ -16,18 +17,38 @@ sim_sets(
 \arguments{
 \item{sim}{Simulation object from \code{\link{sim_distribution}}}
 
+\item{subset_cells}{Logical expression indicating the elements (\code{x, y, depth, cell,
+division, strat, year}) of the survey grid to keep (e.g., \code{cell
+< 100})}
+
 \item{n_sims}{Number of simulations to produce}
 
 \item{trawl_dim}{Trawl width and distance (same units as grid)}
 
 \item{min_sets}{Minimum number of sets per strat}
 
-\item{set_den}{Set density (number of sets per [grid unit] squared)}
+\item{set_den}{Set density (number of sets per grid unit squared)}
 
 \item{resample_cells}{Allow resampling of sampling units (grid cells)?
 (Note: allowing resampling may create bias because
- depletion is imposed at the cell level)}
+depletion is imposed at the cell level)}
 }
 \description{
 Simulate survey sets
+}
+\examples{
+
+sim <- sim_abundance(ages = 1:10, years = 1:5) \%>\%
+          sim_distribution(grid = make_grid(res = c(12, 12)))
+
+## Multiple calls can be useful for defining a custom series of sets
+standard_sets <- sim_sets(sim, year <= 2, set_den = 2 / 1000)
+reduced_sets <- sim_sets(sim, year > 2 & !cell \%in\% 1:100, set_den = 1 / 1000)
+sets <- rbind(standard_sets, reduced_sets)
+sets$set <- seq(nrow(sets)) # Important - make sure set has a unique ID.
+
+survey <- sim_survey(sim, custom_sets = sets)
+plot_survey(survey, which_year = 4, which_sim = 1)
+
+
 }

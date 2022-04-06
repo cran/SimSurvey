@@ -18,6 +18,7 @@ sim_survey(
   age_sampling = "stratified",
   age_length_group = 1,
   age_space_group = "division",
+  custom_sets = NULL,
   light = TRUE
 )
 }
@@ -64,6 +65,10 @@ That is, age sampling can be spread across each "division", "strat" or "set"
 in each year to a maximum number within each length bin (cap is defined using
 the \code{age_cap} argument). Ignored if \code{age_sampling = "random"}.}
 
+\item{custom_sets}{Supply an object of the same structure as returned by \code{\link{sim_sets}} which
+specifies a custom series of set locations to be sampled. Set locations are
+automated if \code{custom_sets = NULL}.}
+
 \item{light}{Drop some objects from the output to keep object size low?}
 }
 \value{
@@ -77,8 +82,8 @@ Simulate stratified-random survey
 \examples{
 
 sim <- sim_abundance(ages = 1:10, years = 1:5) \%>\%
-           sim_distribution(grid = make_grid(res = c(10, 10))) \%>\%
+           sim_distribution(grid = make_grid(res = c(12, 12))) \%>\%
            sim_survey(n_sims = 5, q = sim_logistic(k = 2, x0 = 3))
-plot_survey(sim, which_year = 2, which_sim = 1)
+plot_survey(sim, which_year = 4, which_sim = 1)
 
 }

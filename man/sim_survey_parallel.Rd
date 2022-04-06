@@ -56,6 +56,9 @@ age sampling. Ignored if \code{age_sampling = "random"}.}
 That is, age sampling can be spread across each "division", "strat" or "set"
 in each year to a maximum number within each length bin (cap is defined using
 the \code{age_cap} argument). Ignored if \code{age_sampling = "random"}.}
+    \item{\code{custom_sets}}{Supply an object of the same structure as returned by \code{\link{sim_sets}} which
+specifies a custom series of set locations to be sampled. Set locations are
+automated if \code{custom_sets = NULL}.}
     \item{\code{light}}{Drop some objects from the output to keep object size low?}
   }}
 }
@@ -72,11 +75,12 @@ alternate approaches to a stratified analysis for obtaining survey indices.
 \examples{
 
 \donttest{
-## This call runs a total of 100 simulations of the same survey over
-## the same population
+## This call runs a total of 25 simulations of the same survey over
+## the same population (Note: total number of simulations are low to
+## decrease computation time for the example)
 sim <- sim_abundance(ages = 1:20, years = 1:5) \%>\%
            sim_distribution(grid = make_grid(res = c(10, 10))) \%>\%
-           sim_survey_parallel(n_sims = 10, n_loops = 10, cores = 2,
+           sim_survey_parallel(n_sims = 5, n_loops = 5, cores = 1,
                                q = sim_logistic(k = 2, x0 = 3),
                                quiet = FALSE)
 }

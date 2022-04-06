@@ -117,7 +117,7 @@ strat_data <- function(sim, length_group = 3, alk_scale = "division") {
 #'
 #' @param data            Expects data.table with all grouping variables in stacked format (must include
 #'                        strat_area and tow_area for scaling values)
-#' @param metric          Variable in specificed data.table. e.g. "number", "mass"
+#' @param metric          Variable in specified data.table. e.g. "number", "mass"
 #' @param strat_groups    Grouping variables for calculations of the fine-scale strat-level
 #'                        means (strat and strat_area are required). e.g. c("year", "species",
 #'                        "shiptrip", "NAFOdiv", "strat", "strat_area","age")
@@ -203,7 +203,7 @@ strat_means <- function(data = NULL, metric = NULL, strat_groups = NULL,
 #' sim <- sim_abundance(ages = 1:5, years = 1:5,
 #'                      R = sim_R(log_mean = log(1e+7)),
 #'                      growth = sim_vonB(length_group = 1)) %>%
-#'            sim_distribution(grid = make_grid(res = c(10, 10)),
+#'            sim_distribution(grid = make_grid(res = c(12, 12)),
 #'                             ays_covar = sim_ays_covar(sd = 1)) %>%
 #'            sim_survey(n_sims = 1, q = sim_logistic(k = 2, x0 = 3)) %>%
 #'            run_strat()
@@ -275,7 +275,7 @@ run_strat <- function(sim,
 #' sim <- sim_abundance(ages = 1:5, years = 1:5,
 #'                      R = sim_R(log_mean = log(1e+7)),
 #'                      growth = sim_vonB(length_group = 1)) %>%
-#'            sim_distribution(grid = make_grid(res = c(10, 10)),
+#'            sim_distribution(grid = make_grid(res = c(12, 12)),
 #'                             ays_covar = sim_ays_covar(sd = 1)) %>%
 #'            sim_survey(n_sims = 1, q = sim_logistic(k = 2, x0 = 3)) %>%
 #'            run_strat() %>%
