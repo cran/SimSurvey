@@ -11,12 +11,15 @@ expand_surveys(
 )
 }
 \arguments{
-\item{set_den}{Vector of set densities (number of sets per [grid unit] squared)}
+\item{set_den}{Vector of set densities (number of sets per grid unit squared)}
 
 \item{lengths_cap}{Vector of maximum number of lengths measured per set}
 
 \item{ages_cap}{Vector of maximum number of otoliths to collect per length group
 per division per year}
+}
+\value{
+Returns a data.frame including all combinations of the supplied vectors.
 }
 \description{
 Function is simply a wrapper for \code{\link[base]{expand.grid}} that

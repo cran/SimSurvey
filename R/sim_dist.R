@@ -41,6 +41,8 @@
 #' @param group_years Make space-age-year noise equal across these years
 #' @param model       String indicating either "exponential" or "matern" as the correlation function
 #'
+#' @return Returns a function for use inside \code{\link{sim_distribution}}.
+#'
 #' @export
 
 sim_ays_covar <- function(sd = 2.8, range = 300, lambda = 1, model = "matern",
@@ -154,7 +156,7 @@ sim_ays_covar <- function(sd = 2.8, range = 300, lambda = 1, model = "matern",
 
 
 
-#' Define relationships with covariates
+#' Define a parabolic relationship
 #'
 #' @description  Closure to be used in \code{\link{sim_distribution}}. Form is based on the bi-gaussian function described here: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2993707/.
 #'
@@ -169,16 +171,18 @@ sim_ays_covar <- function(sd = 2.8, range = 300, lambda = 1, model = "matern",
 #'                        forces very low values near zero.
 #' @param plot            Produce a simple plot of the simulated values?
 #'
+#' @return Returns a function for use inside \code{\link{sim_distribution}}.
+#'
 #' @examples
 #'
 #' parabola_fun <- sim_parabola(mu = 50, sigma = 5, plot = TRUE)
-#' parabola_fun(x = 0:100)
+#' parabola_fun(data.frame(depth = 0:100))
 #'
 #' parabola_fun <- sim_parabola(mu = log(40), sigma = 0.5, log_space = FALSE, plot = TRUE)
-#' parabola_fun(x = 1:1000)
+#' parabola_fun(data.frame(depth = 0:100))
 #'
 #' parabola_fun <- sim_parabola(mu = c(50, 120), sigma = c(5, 3), plot = TRUE)
-#' parabola_fun(x = rep(1:200, 2), age = rep(c(1, 2), each = 200))
+#' parabola_fun(expand.grid(depth = 1:200, age = 1:2))
 #'
 #' @rdname sim_parabola
 #' @export
@@ -186,8 +190,10 @@ sim_ays_covar <- function(sd = 2.8, range = 300, lambda = 1, model = "matern",
 sim_parabola <- function(alpha = 0, mu = 200, sigma = 70, sigma_right = NULL,
                          log_space = FALSE, plot = FALSE) {
 
-  function(x = NULL, age = NULL) {
+  function(data) {
 
+    x <- data$depth
+    age <- data$age
     nages <- length(unique(age))
     npar <- c(length(alpha), length(mu), length(sigma))
     if (any(npar > 1) && max(npar) != nages) {
@@ -222,6 +228,79 @@ sim_parabola <- function(alpha = 0, mu = 200, sigma = 70, sigma_right = NULL,
 }
 
 
+
+
+
+
+#' Define a non-linear relationship
+#'
+#' @description
+#' `r lifecycle::badge("experimental")`
+#'
+#' Closure to be used in \code{\link{sim_distribution}}.
+#'
+#' @param formula  Formula describing parametric relationships between data and coefficients.
+#'                 The data used in \code{\link{sim_distribution}} are grid coordinates expanded
+#'                 across ages and years (i.e., includes columns \code{"x", "y", "depth", "cell",
+#'                 "division", "strat", "age", "year"}). Values of the coefficients must be
+#'                 included in argument \code{coeff} as a named list.
+#' @param coeff    Named list of coefficient values used in \code{formula}.
+#'
+#' @return Returns a function for use inside \code{\link{sim_distribution}}.
+#'
+#' @export
+#'
+#' @examples
+#'
+#' ## Make a grid and replicate data for 5 ages and 5 years
+#' ## (This is similar to what happens inside sim_distribution)
+#' grid <- make_grid(shelf_width = 10)
+#' grid_xy <- data.frame(grid)
+#' i <- rep(seq(nrow(grid_xy)), times = 5)
+#' a <- rep(1:5, each = nrow(grid_xy))
+#' grid_xy <- grid_xy[i, ]
+#' grid_xy$age <- a
+#' i <- rep(seq(nrow(grid_xy)), times = 5)
+#' y <- rep(1:5, each = nrow(grid_xy))
+#' grid_xy <- grid_xy[i, ]
+#' grid_xy$year <- y
+#'
+#' ## Now using sim_nlf, produce a function to apply to the expanded grid_xy data
+#' ## For this firs example, the depth effect is parabolic and the vertex is deeper by age
+#' ## (i.e., to impose ontogenetic deepening)
+#' nlf <- sim_nlf(formula = ~ alpha - ((depth - mu + beta * age) ^ 2) / (2 * sigma ^ 2),
+#'                coeff = list(alpha = 0, mu = 200, sigma = 70, beta = -70))
+#' grid_xy$depth_effect <- nlf(grid_xy)
+#'
+#' library(plotly)
+#' grid_xy %>%
+#'   filter(year == 1) %>%
+#'   plot_ly(x = ~depth, y = ~depth_effect, split = ~age) %>%
+#'   add_lines()
+#'
+#' @importFrom lifecycle badge
+#'
+sim_nlf <- function(formula = ~ alpha - ((depth - mu) ^ 2) / (2 * sigma ^ 2),
+                    coeff = list(alpha = 0, mu = 200, sigma = 70)) {
+
+  function(data) {
+
+    vars <- all.vars(formula)
+
+    for (v in vars) {
+      if (v %in% names(data)) assign(v, data[[v]])
+      if (v %in% names(coeff)) assign(v, coeff[[v]])
+    }
+
+    eval(formula[[2]])
+
+  }
+
+
+}
+
+
+
 #' Simulate spatial and temporal distribution
 #'
 #' @description Provided an abundance at age matrix and a survey grid to populate, this function
@@ -230,7 +309,7 @@ sim_parabola <- function(alpha = 0, mu = 200, sigma = 70, sigma_right = NULL,
 #'
 #' @param sim         A list with ages, years and an abundance at age matrix like
 #'                    produced by \code{\link{sim_abundance}}.
-#' @param grid        A raster object defining the survey grid, like \code{\link{survey_grid}}
+#' @param grid        A stars object defining the survey grid, like \code{\link{survey_grid}}
 #'                    or one produced by \code{\link{make_grid}}
 #' @param ays_covar   Closure for simulating age-year-space covariance,
 #'                    like \code{\link{sim_ays_covar}}
@@ -245,21 +324,23 @@ sim_parabola <- function(alpha = 0, mu = 200, sigma = 70, sigma_right = NULL,
 #' @return
 #' Appends three objects to the \code{sim} list:
 #' \itemize{
-#'   \item{\code{grid}} - RasterBrick with the grid details
+#'   \item{\code{grid}} - A stars object with the grid details
 #'   \item{\code{grid_xy}} - Grid details as a data.table in xyz format
 #'   \item{\code{sp_N}} - A data.table with abundance split by age, year and cell
 #' }
 #'
 #' @examples
 #'
-#' sim <- sim_abundance(ages = 1:10, years = 1:10) %>%
-#'            sim_distribution(grid = make_grid(res = c(12, 12)),
+#' \donttest{
+#' sim <- sim_abundance(ages = 1:5, years = 1:5) %>%
+#'            sim_distribution(grid = make_grid(res = c(20, 20)),
 #'                             ays_covar = sim_ays_covar(phi_age = 0.8,
 #'                                                       phi_year = 0.1),
 #'                             depth_par = sim_parabola(mu = 200,
 #'                                                      sigma = 50))
 #' head(sim$sp_N)
 #' head(sim$grid_xy)
+#' }
 #'
 #' @export
 #'
@@ -272,7 +353,7 @@ sim_distribution <- function(sim,
                              depth_par = sim_parabola()) {
 
   ## Space-age-year autoregressive process
-  grid_dat <- data.table::data.table(raster::rasterToPoints(grid))
+  grid_dat <- data.table::data.table(as.data.frame(grid))
   setkeyv(grid_dat, "cell")
   xy <- grid_dat[, c("x", "y")]
   error <- ays_covar(x = xy, ages = sim$ages, years = sim$years, cells = grid_dat$cell)
@@ -288,7 +369,7 @@ sim_distribution <- function(sim,
   grid_edat <- grid_edat[i]
   grid_edat$year <- y
   grid_edat <- grid_edat[order(grid_edat$cell, grid_edat$year, grid_edat$age), ] # sort to align with error array
-  depth <- depth_par(x = grid_edat$depth, age = grid_edat$age)
+  depth <- depth_par(grid_edat)
   depth <- array(depth, dim = dim(error), dimnames = dimnames(error))
 
   ## Define probability of inhabiting each cell

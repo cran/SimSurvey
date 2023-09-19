@@ -5,12 +5,12 @@
 \alias{survey_grid}
 \title{Sample survey simulation grid.}
 \format{
-A RasterStack with 4 variables:
+A stars object with 4 attributes:
 \describe{
-  \item{cell}{Survey cell identifier}
-  \item{division}{NAFO division}
-  \item{strat}{Survey strata number}
-  \item{depth}{Mean depth of the waters under each cell, units = m}
+\item{cell}{Survey cell identifier}
+\item{division}{NAFO division}
+\item{strat}{Survey strata number}
+\item{depth}{Mean depth of the waters under each cell, units = m}
 }
 
 For further details on how this file was created, see the data-raw folder for

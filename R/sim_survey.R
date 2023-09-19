@@ -8,6 +8,8 @@
 #' @param x0     The x-value of the sigmoid's midpoint
 #' @param plot   Plot relationship
 #'
+#' @return Returns a function for use in \code{\link{sim_survey}}.
+#'
 #' @examples
 #' logistic_fun <- sim_logistic(k = 2, x0 = 3, plot = TRUE)
 #' logistic_fun(x = 1:10)
@@ -27,6 +29,8 @@ sim_logistic <- function(k = 2, x0 = 3, plot = FALSE) {
 #' Round simulated population
 #'
 #' @param sim Simulation from \code{\link{sim_distribution}}
+#'
+#' @return Returns a rounded simulation object. Largely used as a helper in \code{\link{sim_survey}}.
 #'
 #' @export
 #'
@@ -60,12 +64,15 @@ round_sim <- function(sim) {
 #'                        (Note: allowing resampling may create bias because
 #'                        depletion is imposed at the cell level)
 #'
+#' @return Returns a data.table including details of each set location.
+#'
 #' @export
 #'
 #' @examples
 #'
-#' sim <- sim_abundance(ages = 1:10, years = 1:5) %>%
-#'           sim_distribution(grid = make_grid(res = c(12, 12)))
+#'\donttest{
+#' sim <- sim_abundance(ages = 1:5, years = 1:5) %>%
+#'           sim_distribution(grid = make_grid(res = c(20, 20)))
 #'
 #' ## Multiple calls can be useful for defining a custom series of sets
 #' standard_sets <- sim_sets(sim, year <= 2, set_den = 2 / 1000)
@@ -74,8 +81,9 @@ round_sim <- function(sim) {
 #' sets$set <- seq(nrow(sets)) # Important - make sure set has a unique ID.
 #'
 #' survey <- sim_survey(sim, custom_sets = sets)
-#' plot_survey(survey, which_year = 4, which_sim = 1)
 #'
+#' plot_survey(survey, which_year = 3, which_sim = 1)
+#' }
 #'
 
 sim_sets <- function(sim, subset_cells, n_sims = 1, trawl_dim = c(1.5, 0.02),
@@ -83,7 +91,7 @@ sim_sets <- function(sim, subset_cells, n_sims = 1, trawl_dim = c(1.5, 0.02),
                      resample_cells = FALSE) {
 
   strat_sets <- cell_sets <- NULL
-  cells <- data.table(rasterToPoints(sim$grid))
+  cells <- data.table(data.frame(sim$grid))
 
   ## Replicate cells data.table for each year in the simulation
   i <- rep(seq(nrow(cells)), times = length(sim$years))
@@ -106,8 +114,8 @@ sim_sets <- function(sim, subset_cells, n_sims = 1, trawl_dim = c(1.5, 0.02),
   ## Strat area and sampling effort
   strat_det <- cells[, list(strat_cells = .N), by = c("sim", "year", "strat")]
   strat_det$tow_area <- prod(trawl_dim)
-  strat_det$cell_area <- prod(res(sim$grid))
-  strat_det$strat_area <- strat_det$strat_cells * prod(res(sim$grid))
+  strat_det$cell_area <- prod(stars::st_res(sim$grid))
+  strat_det$strat_area <- strat_det$strat_cells * prod(stars::st_res(sim$grid))
   strat_det$strat_sets <- round(strat_det$strat_area * set_den) # set allocation
   strat_det$strat_sets[strat_det$strat_sets < min_sets] <- min_sets
   cells <- merge(cells, strat_det, by = c("sim", "year", "strat"))
@@ -137,7 +145,7 @@ sim_sets <- function(sim, subset_cells, n_sims = 1, trawl_dim = c(1.5, 0.02),
 #' @param binom_error         Impose binomial error? Setting to FALSE may introduce bias in stratified estimates
 #'                            at older ages because of more frequent rounding to zero.
 #' @param min_sets            Minimum number of sets per strat
-#' @param set_den             Set density (number of sets per [grid unit] squared). WARNING:
+#' @param set_den             Set density (number of sets per grid unit squared). WARNING:
 #'                            may return an error if \code{set_den} is high and
 #'                            \code{resample_cells = FALSE} because the number of sets allocated may
 #'                            exceed the number of cells in a strata.
@@ -165,10 +173,12 @@ sim_sets <- function(sim, subset_cells, n_sims = 1, trawl_dim = c(1.5, 0.02),
 #'
 #' @examples
 #'
-#' sim <- sim_abundance(ages = 1:10, years = 1:5) %>%
-#'            sim_distribution(grid = make_grid(res = c(12, 12))) %>%
+#'\donttest{
+#' sim <- sim_abundance(ages = 1:5, years = 1:5) %>%
+#'            sim_distribution(grid = make_grid(res = c(20, 20))) %>%
 #'            sim_survey(n_sims = 5, q = sim_logistic(k = 2, x0 = 3))
-#' plot_survey(sim, which_year = 4, which_sim = 1)
+#' plot_survey(sim, which_year = 3, which_sim = 1)
+#' }
 #'
 #' @export
 #'
@@ -312,6 +322,8 @@ sim_survey <- function(sim, n_sims = 1, q = sim_logistic(), trawl_dim = c(1.5, 0
 #' @inheritDotParams sim_survey
 #'
 #' @details \code{\link{sim_survey}} is hard-wired here to be "light" to minimize object size.
+#'
+#' @return Returns an object of the same structure as \code{\link{sim_survey}}.
 #'
 #' @examples
 #'

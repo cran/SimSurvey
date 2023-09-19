@@ -31,24 +31,26 @@ as true vs. estimated length groupings will be mismatched.}
 }
 \value{
 Adds stratified analysis results for the total population (\code{"total_strat"})
-        and the population aggregated by length group and age (\code{"length_strat"} and
-        \code{"age_strat"}, respectively) to the \code{sim} list.
+and the population aggregated by length group and age (\code{"length_strat"} and
+\code{"age_strat"}, respectively) to the \code{sim} list.
 }
 \description{
 Run stratified analysis on simulated data
 }
 \details{
 The \code{"strat_data_fun"} and \code{"strat_means_fun"} allow the use of custom
-         \code{\link{strat_data}} and  \code{\link{strat_means}} functions.
+\code{\link{strat_data}} and  \code{\link{strat_means}} functions.
 }
 \examples{
 
+\donttest{
 sim <- sim_abundance(ages = 1:5, years = 1:5,
                      R = sim_R(log_mean = log(1e+7)),
                      growth = sim_vonB(length_group = 1)) \%>\%
-           sim_distribution(grid = make_grid(res = c(12, 12)),
+           sim_distribution(grid = make_grid(res = c(20, 20)),
                             ays_covar = sim_ays_covar(sd = 1)) \%>\%
            sim_survey(n_sims = 1, q = sim_logistic(k = 2, x0 = 3)) \%>\%
            run_strat()
+}
 
 }

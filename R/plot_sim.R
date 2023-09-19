@@ -29,6 +29,8 @@
 #' @import plotly
 #' @importFrom rlang .data
 #'
+#' @return Returns a plot of class \code{plotly}.
+#'
 #' @export
 #' @rdname plot_trend
 plot_trend <- function(sim, sum_ages = sim$ages, col = viridis::viridis(1), ...) {
@@ -71,21 +73,21 @@ plot_grid <- function(grid, ...) {
   )
   yax <- c(scaleanchor = "x", xax)
 
-  sp_div <- raster::rasterToPolygons(grid$division, dissolve = TRUE)
-  df_div <- suppressMessages(ggplot2::fortify(sp_div) %>% group_by(.data$group))
-  sp_strat <- raster::rasterToPolygons(grid$strat, dissolve = TRUE)
-  df_strat <- suppressMessages(ggplot2::fortify(sp_strat) %>% group_by(.data$group))
-  xyz <- data.frame(rasterToPoints(grid))
+  sf_div <- sf::st_as_sf(grid["division"], as_points = FALSE, merge = TRUE)
+  sf_strat <- sf::st_as_sf(grid["strat"], as_points = FALSE, merge = TRUE)
+  xyz <- data.frame(grid)
 
   plot_ly(...) %>%
     add_trace(data = xyz, x = ~x, y = ~y, z = ~depth,
-              text = ~paste("x:", x, "<br>y:", y, "<br>depth:", depth, "<br>cell:", cell,
-                            "<br>division:", division, "<br>strat:", strat),
-              hoverinfo = "text", type = "heatmap") %>%
-    add_paths(data = df_strat, x = ~long, y = ~lat, color = I("white"),
-              hoverinfo = "none", size = I(0.5), showlegend = FALSE) %>%
-    add_paths(data = df_div, x = ~long, y = ~lat, color = I("darkgrey"),
-              hoverinfo = "none", size = I(4), showlegend = FALSE) %>%
+              hoverinfo = "none", type = "heatmap") %>%
+    add_sf(data = sf_strat, color = I(NA), stroke = I("white"), span = I(1),
+           hoverinfo = "none", showlegend = FALSE) %>%
+    add_sf(data = sf_div, color = I(NA), stroke = I("darkgrey"), span = I(4),
+           hoverinfo = "none", showlegend = FALSE) %>%
+    add_markers(data = xyz, x = ~x, y = ~y, color = I("white"), size = I(0.1),
+                text = ~paste("x:", x, "<br>y:", y, "<br>depth:", depth, "<br>cell:", cell,
+                              "<br>division:", division, "<br>strat:", strat),
+                hoverinfo = "text", type = "heatmap", showlegend = FALSE) %>%
     layout(xaxis = xax, yaxis = yax)
 
 }
@@ -175,8 +177,7 @@ plot_survey <- function(sim, which_year = 1, which_sim = 1) {
   )
   yax <- c(scaleanchor = "x", xax)
 
-  sp_strat <- raster::rasterToPolygons(sim$grid$strat, dissolve = TRUE)
-  df_strat <- suppressMessages(ggplot2::fortify(sp_strat) %>% group_by(.data$group))
+  sf_strat <- sf::st_as_sf(sim$grid["strat"], as_points = FALSE, merge = TRUE)
 
   setdet <- sim$setdet
   setdet <- setdet[setdet$year == which_year & setdet$sim == which_sim, ]
@@ -208,9 +209,8 @@ plot_survey <- function(sim, which_year = 1, which_sim = 1) {
                 showlegend = FALSE,
                 marker = list(size = ~.scale_between(n, 2, 600),
                               sizemode = "area")) %>%
-    add_paths(data = df_strat, x = ~long, y = ~lat, color = I("black"),
-              hoverinfo = "none", size = I(0.5), showlegend = FALSE,
-              alpha = 0.1) %>%
+    add_sf(data = sf_strat, color = I(NA), stroke = I("black"),
+           hoverinfo = "none", span = I(1), showlegend = FALSE, alpha = 0.1) %>%
     layout(xaxis = xax, yaxis = yax,
            margin = list(t = 0, r = 0, l = 0, b = 0, pad = 0))
 
@@ -263,8 +263,8 @@ plot_survey <- function(sim, which_year = 1, which_sim = 1) {
   I_hat <- NULL
   ints <- lapply(quants, function(q) {
     d[, list(prob = paste0(q, "%"),
-             lower = quantile(I_hat, prob = (1 - q / 100) / 2),
-             upper = quantile(I_hat, prob = 1 - (1 - q / 100) / 2)),
+             lower = stats::quantile(I_hat, prob = (1 - q / 100) / 2),
+             upper = stats::quantile(I_hat, prob = 1 - (1 - q / 100) / 2)),
       by = by]
   })
   ints <- data.table::rbindlist(ints)

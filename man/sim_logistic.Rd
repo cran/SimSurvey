@@ -13,9 +13,12 @@ sim_logistic(k = 2, x0 = 3, plot = FALSE)
 
 \item{plot}{Plot relationship}
 }
+\value{
+Returns a function for use in \code{\link{sim_survey}}.
+}
 \description{
 This closure is useful for simulating q inside the
-             \code{\link{sim_survey}} function
+\code{\link{sim_survey}} function
 }
 \examples{
 logistic_fun <- sim_logistic(k = 2, x0 = 3, plot = TRUE)

@@ -12,23 +12,25 @@ survey along with stratified analysis results)}
 }
 \value{
 Adds details and summary stats of stratified estimate error to the
-        \code{sim} list, ending with \code{"_strat_error"} or
-        \code{"_strat_error_stats"}. Error statistics includes mean absolute
-        error (\code{"MAE"}), mean squared error (\code{"MSE"}), and
-        root mean squared error (\code{"RMSE"})
+\code{sim} list, ending with \code{"_strat_error"} or
+\code{"_strat_error_stats"}. Error statistics includes mean absolute
+error (\code{"MAE"}), mean squared error (\code{"MSE"}), and
+root mean squared error (\code{"RMSE"})
 }
 \description{
 Calculate error of stratified estimates
 }
 \examples{
 
+\donttest{
 sim <- sim_abundance(ages = 1:5, years = 1:5,
                      R = sim_R(log_mean = log(1e+7)),
                      growth = sim_vonB(length_group = 1)) \%>\%
-           sim_distribution(grid = make_grid(res = c(12, 12)),
+           sim_distribution(grid = make_grid(res = c(20, 20)),
                             ays_covar = sim_ays_covar(sd = 1)) \%>\%
            sim_survey(n_sims = 1, q = sim_logistic(k = 2, x0 = 3)) \%>\%
            run_strat() \%>\%
            strat_error()
+}
 
 }

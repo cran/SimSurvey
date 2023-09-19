@@ -2,7 +2,7 @@
 % Please edit documentation in R/sim_dist.R
 \name{sim_parabola}
 \alias{sim_parabola}
-\title{Define relationships with covariates}
+\title{Define a parabolic relationship}
 \usage{
 sim_parabola(
   alpha = 0,
@@ -19,14 +19,17 @@ a vector of equal length to the number of ages in the simulation
 (e.g. age-specific depth associations can be specified).}
 
 \item{sigma_right}{Optional parameter to impose asymmetry by supplying a sigma parameter for the right side.
-If used, `sigma` will be used to define the width of the left side. Ignored if `NULL`.}
+If used, \code{sigma} will be used to define the width of the left side. Ignored if \code{NULL}.}
 
-\item{log_space}{Should shape of the parabola be defined in log space? If `TRUE`, logged parameters are
+\item{log_space}{Should shape of the parabola be defined in log space? If \code{TRUE}, logged parameters are
 assumed to be supplied and x values used in the parabola equation are log transformed.
 This allows a more lognormal curve to be defined and, hence, allows a heavier tail and it
 forces very low values near zero.}
 
 \item{plot}{Produce a simple plot of the simulated values?}
+}
+\value{
+Returns a function for use inside \code{\link{sim_distribution}}.
 }
 \description{
 Closure to be used in \code{\link{sim_distribution}}. Form is based on the bi-gaussian function described here: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2993707/.
@@ -34,12 +37,12 @@ Closure to be used in \code{\link{sim_distribution}}. Form is based on the bi-ga
 \examples{
 
 parabola_fun <- sim_parabola(mu = 50, sigma = 5, plot = TRUE)
-parabola_fun(x = 0:100)
+parabola_fun(data.frame(depth = 0:100))
 
 parabola_fun <- sim_parabola(mu = log(40), sigma = 0.5, log_space = FALSE, plot = TRUE)
-parabola_fun(x = 1:1000)
+parabola_fun(data.frame(depth = 0:100))
 
 parabola_fun <- sim_parabola(mu = c(50, 120), sigma = c(5, 3), plot = TRUE)
-parabola_fun(x = rep(1:200, 2), age = rep(c(1, 2), each = 200))
+parabola_fun(expand.grid(depth = 1:200, age = 1:2))
 
 }

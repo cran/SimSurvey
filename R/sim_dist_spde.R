@@ -1,6 +1,9 @@
 
 #' Helper function to generate precision matrix Q for simulation
 #'
+#' @description
+#' `r lifecycle::badge("experimental")`
+#'
 #' This creates the precision matrix from a mesh created by R-INLA with a
 #' specified range. This is currently set up to support the standard spde
 #' approach of precision matrices and the barrier model version. Similar
@@ -17,28 +20,36 @@
 #' @return Q a sparse precision matrix of type dgTMatrix
 #' @keywords internal
 #'
-.Q <- function(mesh,barrier.triangles,range=50,range_fraction=0.2,
-               sigma_u = 1,model="spde"){
+.Q <- function(mesh,barrier.triangles, range = 50, range_fraction = 0.2,
+               sigma_u = 1, model = "spde"){
+
   Q <-  switch(model,
                spde = {
                  ##Priors aren't used...
                  ##I just used this so precision uses range...
-                 i = INLA::inla.spde2.pcmatern(mesh,prior.range=
-                                                 c(1,0.1),
-                                               prior.sigma=c(1,0.1))
-                 INLA::inla.spde2.precision(i,theta=c(log(range),log(sigma_u)))
+                 i = INLA::inla.spde2.pcmatern(mesh, prior.range = c(1, 0.1), prior.sigma = c(1, 0.1))
+                 INLA::inla.spde2.precision(i, theta = c(log(range), log(sigma_u)))
                },
                barrier = {
-                 ##Switch out from using inla.barrier.fem and :::, not really needed here anyways
-                 barrier.model <- INLA::inla.barrier.pcmatern(mesh,barrier.triangles=barrier.triangles)
-                 ##Yes, theta really is supposed to be the reverse of the one above...
-                 INLA::inla.rgeneric.q(barrier.model,"Q",theta=c(log(sigma_u),log(range)))
+
+                 # ##Switch out from using inla.barrier.fem and :::, not really needed here anyways
+                 # barrier.model <- INLA::inla.barrier.pcmatern(mesh,barrier.triangles=barrier.triangles)
+                 # ##Yes, theta really is supposed to be the reverse of the one above...
+                 # INLA::inla.rgeneric.q(barrier.model,"Q",theta=c(log(sigma_u),log(range)))
+
+                 ## Using 'new' approach described in https://eliaskrainski.github.io/INLAspacetime/articles/web/barrierExample.html
+                 barrier.model <- INLAspacetime::mesh2fem.barrier(mesh, barrier.triangles)
+                 INLA::inla.barrier.q(barrier.model, ranges = c(range, range * range_fraction), sigma = sigma_u)
+
                },
                stop("wrong or no specification of covariance model"))
   Q
 }
 
 #' Simulate age-year-space covariance using SPDE approach
+#'
+#' @description
+#' `r lifecycle::badge("experimental")`
 #'
 #' Returns a function to use inside \code{\link{sim_distribution}} to
 #' generate the error term.
@@ -60,37 +71,27 @@
 #'
 #' @examples
 #'
-#' ##SPDE Approach
-#'
 #' \donttest{
 #'
-#' ## Make a grid
-#' my_grid <- make_grid(res = c(10,10))
+#' if (requireNamespace("INLA")) {
 #'
-#' ## Make a mesh based off it
+#'   ## Make a grid
+#'   my_grid <- make_grid(res = c(10,10))
 #'
-#' my_mesh <- make_mesh(my_grid)
-#' sim <- sim_abundance(ages = 1:10, years = 1:10) %>%
-#'          sim_distribution(grid = my_grid,
-#'                           ays_covar = sim_ays_covar_spde(phi_age = 0.8,
-#'                                                          phi_year = 0.1,
-#'                                                          model = "spde",
-#'                                                          mesh = my_mesh),
-#'                           depth_par = sim_parabola(mu = 200,
-#'                                                    sigma = 50))
-#' plot_distribution(sim,ages = 1:5, years = 1:5, type = "heatmap")
+#'   ## Make a mesh based off it
 #'
-#' ## Barrier Approach
-#' sim <- sim_abundance(ages = 1:10, years = 1:10) %>%
-#'          sim_distribution(grid = survey_grid,
-#'                           ays_covar = sim_ays_covar_spde(phi_age = 0.8,
-#'                                                          phi_year = 0.1,
-#'                                                          model = "barrier",
-#'                                                          mesh = survey_lite_mesh$mesh,
-#'                                                          barrier.triangles =
-#'                                                          survey_lite_mesh$barrier_tri),
-#'                           depth_par = sim_parabola())
-#' plot_distribution(sim, ages = 1:5, years = 1:5, type = "heatmap")
+#'   my_mesh <- make_mesh(my_grid)
+#'   sim <- sim_abundance(ages = 1:10, years = 1:10) %>%
+#'           sim_distribution(grid = my_grid,
+#'                            ays_covar = sim_ays_covar_spde(phi_age = 0.8,
+#'                                                           phi_year = 0.1,
+#'                                                           model = "spde",
+#'                                                           mesh = my_mesh),
+#'                            depth_par = sim_parabola(mu = 200,
+#'                                                     sigma = 50))
+#'   plot_distribution(sim, ages = 1:5, years = 1:5, type = "heatmap")
+#'
+#' }
 #'
 #' }
 #'
@@ -99,7 +100,7 @@
 
 sim_ays_covar_spde <- function(sd = 2.8,
                                range = 300,
-                               model = "barrier",
+                               model = "spde",
                                phi_age = 0.5,
                                phi_year = 0.9,
                                group_ages = 5:20,
@@ -108,6 +109,13 @@ sim_ays_covar_spde <- function(sd = 2.8,
                                barrier.triangles) {
 
   function(x = NULL, ages = NULL, years = NULL, cells = NULL){
+
+    for (pkg in c("INLA")) {
+      if (!requireNamespace(pkg, quietly = TRUE)) {
+        stop(paste(pkg, "is needed for make_mesh to work. Please install it."), call. = FALSE)
+      }
+    }
+
     na <- length(ages)
     ny <- length(years)
     nc <- length(cells)
@@ -148,7 +156,7 @@ sim_ays_covar_spde <- function(sd = 2.8,
     ##A matrix to relate the cell locations to the mesh locations
     A <- INLA::inla.spde.make.A(mesh,as.matrix(x))
     ##Draw samples from GF defined by Q and project it to the cell locs
-    u.data <- A%*%INLA::inla.qsample(na*ny,Q=Q)
+    u.data <- as.matrix(A%*%INLA::inla.qsample(na*ny,Q=Q))
     ##Fill up the error array with the samples
     E <- array(t(u.data),dim=c(na,ny,nc),
                dimnames=list(age = ages,year = years,cell=cells))
@@ -219,12 +227,16 @@ sim_ays_covar_spde <- function(sd = 2.8,
 #' @param cutoff Minimum distance allowed between points
 #' @param ... Other options to pass to inla.mesh.2d
 #'
+#' @return Returns an object of class \code{inla.mesh}.
+#'
 #' @examples
 #'
 #' \donttest{
 #'
-#' basic_mesh <- make_mesh()
-#' plot(basic_mesh)
+#' if (requireNamespace("INLA")) {
+#'   basic_mesh <- make_mesh()
+#'   plot(basic_mesh)
+#' }
 #'
 #' }
 #'
@@ -238,13 +250,13 @@ make_mesh <- function(grid = make_grid(),
                       offset = c(max.edge, bound.outer),
                       ...) {
 
-  for (pkg in c("rgdal", "INLA")) {
+  for (pkg in c("INLA")) {
     if (!requireNamespace(pkg, quietly = TRUE)) {
       stop(paste(pkg, "is needed for make_mesh to work. Please install it."), call. = FALSE)
     }
   }
 
-  gridPoints <- raster::rasterToPoints(grid)
+  gridPoints <- data.frame(grid)
   locs <- as.matrix(gridPoints[,1:2])
   mesh <- INLA::inla.mesh.2d(locs, offset = offset, max.edge = max.edge, cutoff = cutoff, ...)
   mesh

@@ -33,13 +33,17 @@ division, strat, year}) of the survey grid to keep (e.g., \code{cell
 (Note: allowing resampling may create bias because
 depletion is imposed at the cell level)}
 }
+\value{
+Returns a data.table including details of each set location.
+}
 \description{
 Simulate survey sets
 }
 \examples{
 
-sim <- sim_abundance(ages = 1:10, years = 1:5) \%>\%
-          sim_distribution(grid = make_grid(res = c(12, 12)))
+\donttest{
+sim <- sim_abundance(ages = 1:5, years = 1:5) \%>\%
+          sim_distribution(grid = make_grid(res = c(20, 20)))
 
 ## Multiple calls can be useful for defining a custom series of sets
 standard_sets <- sim_sets(sim, year <= 2, set_den = 2 / 1000)
@@ -48,7 +52,8 @@ sets <- rbind(standard_sets, reduced_sets)
 sets$set <- seq(nrow(sets)) # Important - make sure set has a unique ID.
 
 survey <- sim_survey(sim, custom_sets = sets)
-plot_survey(survey, which_year = 4, which_sim = 1)
 
+plot_survey(survey, which_year = 3, which_sim = 1)
+}
 
 }

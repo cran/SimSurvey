@@ -30,6 +30,9 @@ error_stats <- function(error) {
 #' @param alk_scale     Spatial scale at which to construct and apply age-length-keys:
 #'                      "division", "strat" or "set".
 #'
+#' @return Returns a list including set details (\code{setdet}), length-frequencies (\code{lf}),
+#' and age-frequencies (\code{af}).
+#'
 #' @export
 #'
 
@@ -124,6 +127,8 @@ strat_data <- function(sim, length_group = 3, alk_scale = "division") {
 #' @param survey_groups   Grouping variables for large-scale summary calculations. e.g. ("year","species")
 #' @param confidence      Percent for confidence limits
 #'
+#' @return Returns a data.table including stratified estimates of abundance.
+#'
 #' @export
 #'
 
@@ -200,13 +205,15 @@ strat_means <- function(data = NULL, metric = NULL, strat_groups = NULL,
 #'
 #' @examples
 #'
+#' \donttest{
 #' sim <- sim_abundance(ages = 1:5, years = 1:5,
 #'                      R = sim_R(log_mean = log(1e+7)),
 #'                      growth = sim_vonB(length_group = 1)) %>%
-#'            sim_distribution(grid = make_grid(res = c(12, 12)),
+#'            sim_distribution(grid = make_grid(res = c(20, 20)),
 #'                             ays_covar = sim_ays_covar(sd = 1)) %>%
 #'            sim_survey(n_sims = 1, q = sim_logistic(k = 2, x0 = 3)) %>%
 #'            run_strat()
+#' }
 #'
 #' @export
 #'
@@ -272,14 +279,16 @@ run_strat <- function(sim,
 #'
 #' @examples
 #'
+#' \donttest{
 #' sim <- sim_abundance(ages = 1:5, years = 1:5,
 #'                      R = sim_R(log_mean = log(1e+7)),
 #'                      growth = sim_vonB(length_group = 1)) %>%
-#'            sim_distribution(grid = make_grid(res = c(12, 12)),
+#'            sim_distribution(grid = make_grid(res = c(20, 20)),
 #'                             ays_covar = sim_ays_covar(sd = 1)) %>%
 #'            sim_survey(n_sims = 1, q = sim_logistic(k = 2, x0 = 3)) %>%
 #'            run_strat() %>%
 #'            strat_error()
+#' }
 #'
 #' @export
 #'

@@ -39,7 +39,7 @@ because depletion is imposed at the cell level.}
     \item{\code{binom_error}}{Impose binomial error? Setting to FALSE may introduce bias in stratified estimates
 at older ages because of more frequent rounding to zero.}
     \item{\code{min_sets}}{Minimum number of sets per strat}
-    \item{\code{set_den}}{Set density (number of sets per [grid unit] squared). WARNING:
+    \item{\code{set_den}}{Set density (number of sets per grid unit squared). WARNING:
 may return an error if \code{set_den} is high and
 \code{resample_cells = FALSE} because the number of sets allocated may
 exceed the number of cells in a strata.}
@@ -61,6 +61,9 @@ specifies a custom series of set locations to be sampled. Set locations are
 automated if \code{custom_sets = NULL}.}
     \item{\code{light}}{Drop some objects from the output to keep object size low?}
   }}
+}
+\value{
+Returns an object of the same structure as \code{\link{sim_survey}}.
 }
 \description{
 This function is a wrapper for \code{\link{sim_survey}} except it allows for

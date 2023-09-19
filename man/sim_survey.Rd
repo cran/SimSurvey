@@ -42,7 +42,7 @@ at older ages because of more frequent rounding to zero.}
 
 \item{min_sets}{Minimum number of sets per strat}
 
-\item{set_den}{Set density (number of sets per [grid unit] squared). WARNING:
+\item{set_den}{Set density (number of sets per grid unit squared). WARNING:
 may return an error if \code{set_den} is high and
 \code{resample_cells = FALSE} because the number of sets allocated may
 exceed the number of cells in a strata.}
@@ -81,9 +81,11 @@ Simulate stratified-random survey
 }
 \examples{
 
-sim <- sim_abundance(ages = 1:10, years = 1:5) \%>\%
-           sim_distribution(grid = make_grid(res = c(12, 12))) \%>\%
+\donttest{
+sim <- sim_abundance(ages = 1:5, years = 1:5) \%>\%
+           sim_distribution(grid = make_grid(res = c(20, 20))) \%>\%
            sim_survey(n_sims = 5, q = sim_logistic(k = 2, x0 = 3))
-plot_survey(sim, which_year = 4, which_sim = 1)
+plot_survey(sim, which_year = 3, which_sim = 1)
+}
 
 }
