@@ -30,3 +30,9 @@
 
 * Switch to dependence on the sf and stars package rather than the sp and raster package given the evolution of R spatial
 * Switch to new INLAspacetime functions for simulating from a barrier mesh
+
+# SimSurvey 0.1.7
+
+* Minor improvements to documentation
+* Dropped dependence on **magrittr** pipe (`%>%`); now using native R pipe (`|>`)
+

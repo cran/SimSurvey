@@ -1,35 +1,32 @@
-
 #' Simple plotting functions
 #'
-#' @description These functions are simple plotting helpers to get some quick
-#' visuals of values produced by \code{\link{sim_abundance}},
-#' \code{\link{sim_distribution}}, etc.
+#' These are simple plotting helpers to quickly visualize outputs from
+#' [`sim_abundance()`], [`sim_distribution()`], and related simulation functions.
 #'
-#' @param sim            Object returned by \code{\link{sim_abundance}},
-#'                       \code{\link{sim_distribution}}, etc.
-#' @param mat            Name of matrix in \code{sim} list to plot.
-#' @param grid           Grid produced by \code{\link{make_grid}}.
-#' @param xlab,ylab,zlab Axes labels.
-#' @param sum_ages       Sum across these ages
-#' @param ages           Subset data to one or more ages.
-#' @param lengths        Subset data to one or more length groups.
-#' @param years          Subset data to one or more years.
-#' @param type           Plot type: "contour" or "heatmap".
-#' @param scale          Plot response on "natural" or "log" scale?
-#' @param which_year     Subset to specific year
-#' @param which_sim      Subset to specific sim
-#' @param select_by      Select plot by "age", "length" or "year"?
-#' @param plot_by        Plot error surface by "rule" or "samples"?
-#' @param surveys        Subset data to one or more surveys.
-#' @param quants         Quantile intervals to display on fan plot
-#' @param col            Plot color
-#' @param which_strat    Which strat values to focus on? (total, length, or age)
-#' @param ...            Additional arguments to pass to \code{\link[plotly]{plot_ly}}.
+#' @param sim Object returned by [`sim_abundance()`], [`sim_distribution()`], etc.
+#' @param mat Name of the matrix in the `sim` list to plot.
+#' @param grid Grid produced by [`make_grid()`].
+#' @param xlab,ylab,zlab Axis labels.
+#' @param sum_ages Vector of ages to sum across.
+#' @param ages Subset the data to one or more ages.
+#' @param lengths Subset the data to one or more length groups.
+#' @param years Subset the data to one or more years.
+#' @param type Plot type: `"contour"` or `"heatmap"`.
+#' @param scale Plot response on `"natural"` or `"log"` scale.
+#' @param which_year Subset to a specific year.
+#' @param which_sim Subset to a specific simulation replicate.
+#' @param select_by Select plot by `"age"`, `"length"`, or `"year"`.
+#' @param plot_by Plot error surface by `"rule"` or `"samples"`.
+#' @param surveys Subset the data to one or more surveys.
+#' @param quants Quantile intervals to display on the fan plot.
+#' @param col Plot color.
+#' @param which_strat Stratification focus: `"total"`, `"length"`, or `"age"`.
+#' @param ... Additional arguments passed to [`plotly::plot_ly()`].
+#'
+#' @return A plot of class `plotly`.
 #'
 #' @import plotly
 #' @importFrom rlang .data
-#'
-#' @return Returns a plot of class \code{plotly}.
 #'
 #' @export
 #' @rdname plot_trend
@@ -49,7 +46,7 @@ plot_trend <- function(sim, sum_ages = sim$ages, col = viridis::viridis(1), ...)
 #' @rdname plot_trend
 plot_surface <- function(sim, mat = "N", xlab = "Age", ylab = "Year", zlab = mat, ...) {
   plot_ly(x = sim$ages, y = sim$years, z = t(sim[[mat]]), type = "surface",
-          ...) %>%
+          ...) |>
     layout(
       scene = list(
         xaxis = list(title = xlab),
@@ -77,17 +74,17 @@ plot_grid <- function(grid, ...) {
   sf_strat <- sf::st_as_sf(grid["strat"], as_points = FALSE, merge = TRUE)
   xyz <- data.frame(grid)
 
-  plot_ly(...) %>%
+  plot_ly(...) |>
     add_trace(data = xyz, x = ~x, y = ~y, z = ~depth,
-              hoverinfo = "none", type = "heatmap") %>%
+              hoverinfo = "none", type = "heatmap") |>
     add_sf(data = sf_strat, color = I(NA), stroke = I("white"), span = I(1),
-           hoverinfo = "none", showlegend = FALSE) %>%
+           hoverinfo = "none", showlegend = FALSE) |>
     add_sf(data = sf_div, color = I(NA), stroke = I("darkgrey"), span = I(4),
-           hoverinfo = "none", showlegend = FALSE) %>%
+           hoverinfo = "none", showlegend = FALSE) |>
     add_markers(data = xyz, x = ~x, y = ~y, color = I("white"), size = I(0.1),
                 text = ~paste("x:", x, "<br>y:", y, "<br>depth:", depth, "<br>cell:", cell,
                               "<br>division:", division, "<br>strat:", strat),
-                hoverinfo = "text", type = "heatmap", showlegend = FALSE) %>%
+                hoverinfo = "text", type = "heatmap", showlegend = FALSE) |>
     layout(xaxis = xax, yaxis = yax)
 
 }
@@ -132,12 +129,12 @@ plot_distribution <- function(sim, ages = sim$ages, years = sim$years,
     z <- split_d[[i]]
     attr(z, "class") <- attr(z, "call") <- NULL # plotly didn't like the xtabs attributes
     dimnames(z) <- NULL
-    p <- p %>% add_trace(type = type,
+    p <- p |> add_trace(type = type,
                          z = z,
                          visible = i == 1,
                          showscale = i == 1,
                          name = names(split_d)[i],
-                         colorbar = list(title = "N")) %>%
+                         colorbar = list(title = "N")) |>
       layout(xaxis = xax, yaxis = yax)
     steps[[i]] <- list(args = list(list(visible = vis,
                                         showscale = vis)),
@@ -146,7 +143,7 @@ plot_distribution <- function(sim, ages = sim$ages, years = sim$years,
   }
 
   if (length(ages) > 1 | length(years) > 1) {
-    p <- p %>%
+    p <- p |>
       layout(sliders = list(list(
         currentvalue = list(prefix = "Age-Year: "),
         steps = steps
@@ -201,46 +198,46 @@ plot_survey <- function(sim, which_year = 1, which_sim = 1) {
 
   base <- plot_ly(data = d)
 
-  sp_p <- base %>%
-    group_by(set) %>%
-    summarise(x = unique(.data$x), y = unique(.data$y), n = sum(!is.na(.data$measured))) %>%
+  sp_p <- base |>
+    group_by(set) |>
+    summarise(x = unique(.data$x), y = unique(.data$y), n = sum(!is.na(.data$measured))) |>
     add_markers(x = ~x, y = ~y, text = ~n,
                 color = ~n, name = "n",
                 showlegend = FALSE,
                 marker = list(size = ~.scale_between(n, 2, 600),
-                              sizemode = "area")) %>%
+                              sizemode = "area")) |>
     add_sf(data = sf_strat, color = I(NA), stroke = I("black"),
-           hoverinfo = "none", span = I(1), showlegend = FALSE, alpha = 0.1) %>%
+           hoverinfo = "none", span = I(1), showlegend = FALSE, alpha = 0.1) |>
     layout(xaxis = xax, yaxis = yax,
            margin = list(t = 0, r = 0, l = 0, b = 0, pad = 0))
 
-  hist_base <- base %>%
-    mutate(length = group_lengths(length, length_group)) %>%
-    group_by(set) %>%
-    filter(!is.na(.data$measured)) %>%
-    slice(rep(1:length(.data$measured), each = 2)) %>%
+  hist_base <- base |>
+    mutate(length = group_lengths(length, length_group)) |>
+    group_by(set) |>
+    filter(!is.na(.data$measured)) |>
+    slice(rep(1:length(.data$measured), each = 2)) |>
     mutate(lab = rep(c("caught", "sampled"), times = length(.data$measured) / 2))
 
-  lf_p <- hist_base %>%
-    filter(.data$measured & .data$lab == "sampled" | .data$lab == "caught") %>%
+  lf_p <- hist_base |>
+    filter(.data$measured & .data$lab == "sampled" | .data$lab == "caught") |>
     add_histogram(x = ~length, color = ~lab, histnorm = "percent",
                   colors = c("#FDE725FF", "#21908CFF"),
-                  legendgroup = ~lab) %>%
+                  legendgroup = ~lab) |>
     add_lines(data = true_length, x = ~length, y = ~percent, color = I("#440154FF"),
               fill = "tozeroy", name = "true", fillcolor = "#44015433",
-              legendgroup = "true") %>%
+              legendgroup = "true") |>
     layout(xaxis = list(title = "Length",
                         range = grDevices::extendrange(range(samp$length, na.rm = TRUE))),
            yaxis = list(title = "Percent", ticksuffix = "%"))
 
-  af_p <- hist_base %>%
-    filter(.data$aged & .data$lab == "sampled" | .data$lab == "caught") %>%
+  af_p <- hist_base |>
+    filter(.data$aged & .data$lab == "sampled" | .data$lab == "caught") |>
     add_histogram(x = ~age, color = ~lab, histnorm = "percent",
                   colors = c("#FDE725FF", "#21908CFF"),
-                  legendgroup = ~lab, showlegend = FALSE) %>%
+                  legendgroup = ~lab, showlegend = FALSE) |>
     add_lines(data = true_age, x = ~age, y = ~percent, color = I("#440154FF"),
               fill = "tozeroy", name = "true", fillcolor = "#44015433",
-              legendgroup = "true", showlegend = FALSE) %>%
+              legendgroup = "true", showlegend = FALSE) |>
     layout(xaxis = list(title = "Age",
                         range = grDevices::extendrange(range(samp$age, na.rm = TRUE))),
            yaxis = list(title = "Percent", ticksuffix = "%"))
@@ -249,8 +246,8 @@ plot_survey <- function(sim, which_year = 1, which_sim = 1) {
           subplot(lf_p, af_p, nrows = 2, titleX = TRUE, titleY = TRUE,
                   margin = 0.1),
           nrows = 1, margin = c(0, 0.2, 0, 0), widths = c(0.75, 0.25),
-          titleX = TRUE, titleY = TRUE) %>%
-    colorbar(x = 0.52, y = 1) %>%
+          titleX = TRUE, titleY = TRUE) |>
+    colorbar(x = 0.52, y = 1) |>
     layout(legend = list(x = 1, y = 0.95))
 
 }
@@ -274,12 +271,12 @@ plot_survey <- function(sim, which_year = 1, which_sim = 1) {
 
 ## helper function for making fan plots
 .fan <- function(d, x = NULL, xlab = NULL, cols = NULL, ylim = NULL, ...) {
-  plot_ly(data = d, x = x) %>%
+  plot_ly(data = d, x = x) |>
     add_ribbons(ymin = ~lower, ymax = ~upper, line = list(width = 0),
                 color = ~prob, colors = cols,
-                showlegend = FALSE) %>%
+                showlegend = FALSE) |>
     add_lines(y = ~I, color = I("black"), name = "True",
-              showlegend = FALSE) %>%
+              showlegend = FALSE) |>
     layout(yaxis = list(title = "Abundance index",
                         range = ylim),
            xaxis = list(title = xlab), ...)
@@ -518,12 +515,12 @@ plot_error_surface <- function(sim, plot_by = "rule") {
       dimnames(z) <- NULL # plotly didn't like the xtabs attributes
       attr(z, "class") <- NULL
       attr(z, "call") <- NULL
-      p <- p %>% add_surface(z = t(z),
+      p <- p |> add_surface(z = t(z),
                              cmin = min(d$RMSE), cmax = max(d$RMSE),
                              showscale = i == 1,
                              name = names(split_d)[i],
                              colorbar = list(title = "RMSE"),
-                             hoverinfo = "skip") %>%
+                             hoverinfo = "skip") |>
         add_surface(z = t(z),
                     visible = FALSE,
                     showscale = FALSE,
@@ -532,7 +529,7 @@ plot_error_surface <- function(sim, plot_by = "rule") {
                     hoverinfo = "skip")
     }
     if (plot_by == "samples") {
-      p <- p %>% add_mesh(z = ~RMSE,
+      p <- p |> add_mesh(z = ~RMSE,
                           intensity = ~RMSE,
                           data = split_d[[i]],
                           cmin = min(d$RMSE), cmax = max(d$RMSE),
@@ -541,7 +538,7 @@ plot_error_surface <- function(sim, plot_by = "rule") {
                           flatshading = TRUE,
                           colorbar = list(title = "RMSE"),
                           contour = list(show = TRUE, width = 15, color = toRGB("white")),
-                          hoverinfo = "skip") %>%
+                          hoverinfo = "skip") |>
         add_mesh(z = ~RMSE,
                  intensity = ~RMSE,
                  data = split_d[[i]],
@@ -553,7 +550,7 @@ plot_error_surface <- function(sim, plot_by = "rule") {
                  contour = list(show = TRUE, width = 15, color = toRGB("white")),
                  hoverinfo = "skip")
     }
-    p <- p %>%
+    p <- p |>
       add_markers(z = ~RMSE,
                   x = marker_x,
                   y = marker_y,
@@ -574,7 +571,7 @@ plot_error_surface <- function(sim, plot_by = "rule") {
   }
 
 
-  p %>%
+  p |>
     layout(
       updatemenus = list(
         list(
@@ -609,10 +606,10 @@ plot_error_surface <- function(sim, plot_by = "rule") {
 
 
 .label_plot <- function(d, text = NULL, name = NULL, ...) {
-  plot_ly(data = d) %>%
+  plot_ly(data = d) |>
     add_text(x = 1, y = ~rank, text = text, hoverinfo = "none",
-             name = name, ...) %>%
-    hide_guides() %>%
+             name = name, ...) |>
+    hide_guides() |>
     layout(yaxis = list(showticklabels = FALSE,
                         tickvals = d$rank,
                         title = "",
@@ -628,10 +625,10 @@ plot_error_surface <- function(sim, plot_by = "rule") {
 
 
 .rank_plot <- function(d, x = NULL, name = NULL, ...) {
-  plot_ly(data = d) %>%
+  plot_ly(data = d) |>
     add_markers(x = x, y = ~rank, color = x, colors = rev(viridis::viridis(100)),
-                name = name, ...) %>%
-    hide_guides() %>%
+                name = name, ...) |>
+    hide_guides() |>
     layout(yaxis = list(showticklabels = FALSE,
                         tickvals = d$rank,
                         title = "",
@@ -704,7 +701,7 @@ plot_survey_rank <- function(sim, which_strat = "age") {
 
   suppressWarnings({
     subplot(a, b, titleX = TRUE, shareY = TRUE, nrows = 1, widths = c(0.3, 0.7),
-            margin = 0.01) %>%
+            margin = 0.01) |>
       layout(margin = list(b = 10, l = 10))
   })
 

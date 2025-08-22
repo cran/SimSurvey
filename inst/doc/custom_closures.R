@@ -1,4 +1,4 @@
-## ---- include = FALSE---------------------------------------------------------
+## ----include = FALSE----------------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
   echo = TRUE,
@@ -25,13 +25,13 @@ logistic_fun <- sim_logistic(k = 1, x0 = 5)
 logistic_curve <- logistic_fun(ages)
 plot(x = ages, y = logistic_curve, xlab = "Age", ylab = "Catchability", type = "l")
 
-## ---- eval = FALSE------------------------------------------------------------
-#  
-#  set.seed(438)
-#  sim <- sim_abundance() %>%
-#    sim_distribution() %>%
-#    sim_survey(n_sims = 5, q = sim_logistic(k = 1, x0 = 5))
-#  
+## ----eval = FALSE-------------------------------------------------------------
+# 
+# set.seed(438)
+# sim <- sim_abundance() %>%
+#   sim_distribution() %>%
+#   sim_survey(n_sims = 5, q = sim_logistic(k = 1, x0 = 5))
+# 
 
 ## -----------------------------------------------------------------------------
 
@@ -48,11 +48,11 @@ gaussian_curve <- gaussian_fun(ages)
 plot(x = ages, y = gaussian_curve, xlab = "Age", ylab = "Catchability", type = "l")
 
 
-## ---- eval = FALSE------------------------------------------------------------
-#  
-#  set.seed(438)
-#  sim <- sim_abundance() %>%
-#    sim_distribution() %>%
-#    sim_survey(n_sims = 5, q = sim_gaussian(b = 15, c = 5))
-#  
+## ----eval = FALSE-------------------------------------------------------------
+# 
+# set.seed(438)
+# sim <- sim_abundance() %>%
+#   sim_distribution() %>%
+#   sim_survey(n_sims = 5, q = sim_gaussian(b = 15, c = 5))
+# 
 
