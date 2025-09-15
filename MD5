@@ -1,7 +1,7 @@
-18c1aa042ff1e270584ec15915ccec32 *DESCRIPTION
-a3676310c94be157baadfb5dab9bfd13 *NAMESPACE
-d38da88bf0950f4c2ffbcd7d9eb189d2 *NEWS.md
-405a7208efd1d4aab1b12e775cfae298 *R/data.R
+3b17b020d7ada0688e7e8eeaf1833c2f *DESCRIPTION
+77b09a32e9e1e50c43b68b21abc949c9 *NAMESPACE
+47371e44b4ea2c2e1586682198dfbd81 *NEWS.md
+4933ed40df60676c57cfccf24f24781d *R/data.R
 2ab2a0de7e2c3fb50f54d36ede76d8d0 *R/helper.R
 e14737a30d286d74a8ccd0c40d5f1d7a *R/icc.R
 325967d3bc666283a12110fcfbe08d05 *R/make_grid.R
@@ -42,7 +42,7 @@ c3978703d8f40f2679795335715e98f4 *man/figures/lifecycle-experimental.svg
 0518d5946859726348f09a54a2ec956b *man/figures/logo.png
 7a4e06cecca31cff9ee32cbdf9586f67 *man/group_lengths.Rd
 4637546e0b99249d4724b15949ab3e32 *man/icc.Rd
-a180fead194b4042fb3fbb673f4a26eb *man/land.Rd
+7352bb1a6bfb44cd8b773cc0f7d70a43 *man/land.Rd
 b60d5050b4ab2baa17e3f13c78192c21 *man/make_grid.Rd
 3af05206370ea307d03927e2a4363397 *man/make_mesh.Rd
 2b458bfe1a4c7a11a0887b5eed406456 *man/object_size.Rd
